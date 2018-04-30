@@ -29,7 +29,7 @@ public class MySqlUserService {
             statement = connect.createStatement();
 
             preparedStatement = connect
-                    .prepareStatement("SELECT id, first_name, last_name, user_name from mydb.userCvorum");
+                    .prepareStatement("SELECT id, first_name, last_name, user_name, img from mydb.userCvorum");
             resultSet = preparedStatement.executeQuery();
             listUsers = writeResultSet(resultSet);
         }
@@ -51,7 +51,8 @@ public class MySqlUserService {
             builder.withId(resultSet.getInt("id"))
                    .withFirstName(resultSet.getString("first_name"))
                    .withLastName(resultSet.getString("last_name"))
-                   .withUserName(resultSet.getString("user_name"));
+                   .withUserName(resultSet.getString("user_name"))
+                   .withImg(resultSet.getString("img"));
 
             final User user = builder.build();
 
@@ -80,6 +81,45 @@ public class MySqlUserService {
         }
         catch (Exception ex) {
             ex.printStackTrace();
+        }
+        finally {
+            close();
+        }
+    }
+
+    public void updateImage(UpdateImage updateImage) throws SQLException {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            connect = DriverManager.getConnection(strcon);
+            statement = connect.createStatement();
+
+            preparedStatement = connect.prepareStatement("update mydb.userCvorum set img = ? where id = ?");
+            preparedStatement.setString(1, updateImage.getImg());
+            preparedStatement.setInt(2, updateImage.getId());
+
+            preparedStatement.executeUpdate();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            close();
+        }
+    }
+
+    public void deleteUser(int ID) throws SQLException {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            connect = DriverManager.getConnection(strcon);
+            statement = connect.createStatement();
+
+            preparedStatement = connect
+                    .prepareStatement("delete from mydb.userCvorum where id = ? ; ");
+            preparedStatement.setInt(1, ID);
+            preparedStatement.executeUpdate();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
         }
         finally {
             close();

@@ -4,7 +4,8 @@ $.get('/selectAllUsers', function (data) {
             .append(data[i].id + ' ')
             .append(data[i].firstName + ' ')
             .append(data[i].lastName + ' ')
-            .append(data[i].username + '<br>');
+            .append(data[i].username + ' ')
+            .append(data[i].img + '<br>');
     }
 });
 
@@ -25,5 +26,34 @@ $('#insertUser').click (function () {
     });
 
     alert ('Object inserted');
+    location.reload();
+});
+
+$('#update').click (function () {
+    var objToUserTable = {
+        id: $('#userid').val(),
+        img: $('#image').val()
+    };
+
+    $.ajax('/updateImage', {
+        type: 'put',
+        data: JSON.stringify(objToUserTable),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function(data) { alert('Receive: ' + data); }
+    });
+
+    alert ('Image updated!');
+    location.reload();
+});
+
+$('#delete').click (function () {
+    var id = $('#userid2').val();
+
+    $.ajax('/deleteUser/' + id, {
+        type: 'delete',
+        success: function(data) { alert('Deleted!'); }
+    });
+
     location.reload();
 });
