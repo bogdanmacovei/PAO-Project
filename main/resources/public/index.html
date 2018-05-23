@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<title>Online Shop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-teal.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"> </script>
+<body>
+
+<div class="w3-sidebar w3-collapse w3-white w3-animate-left w3-large" style="z-index:3;width:300px;" id="mySidebar">
+
+    <div class="w3-bar w3-black w3-center">
+        <a class="w3-bar-item w3-button" style="width:33.33%" href="javascript:void(0)" onclick="openNav('nav01')">
+            <i class="fa fa-bars w3-xlarge"></i></a>
+        <a class="w3-bar-item w3-button" style="width:33.33%" href="javascript:void(0)" onclick="openNav('nav03')">
+            <i class="fa fa-plus w3-xlarge"></i></a>
+        <a href = "/cos.html" class="w3-bar-item w3-button" style="width:33.33%">
+            <i class="fa fa-shopping-cart w3-xlarge"></i></a>
+    </div>
+
+    <div id="nav01" class="w3-bar-block">
+        <a class="w3-button w3-hover-teal w3-hide-large w3-large w3-right" href="javascript:void(0)" onclick="w3_close()">×</a>
+
+        <a class="w3-bar-item w3-button" href="/?tab=all">Toate produsele</a>
+        <a class="w3-bar-item w3-button" href="/?tab=laptop">Laptopuri</a>
+        <a class="w3-bar-item w3-button" href="/?tab=telefon">Telefoane</a>
+        <a class="w3-bar-item w3-button" href="/?tab=tableta">Tablete</a>
+        <p style = "cursor: pointer;" id = "logout" class="w3-bar-item w3-button">Log out</p>
+    </div>
+
+    <div id="nav02">
+
+    </div>
+
+    <div id="nav03">
+        <div class="w3-container w3-border-bottom">
+            <h1 class="w3-text-theme">Adauga produs</h1>
+            <div class = "adaugare">
+                <input type = "text" id = "fieldNume" placeholder = "Numele produsului"><br>
+                <input type = "number" id = "fieldPret" placeholder = "Pretul unitar"><br>
+                <input type = "number" id = "fieldCantitate" placeholder = "Stoc actual"><br>
+                <input type = "text" id = "fieldImagine" placeholder = "Link imagine"><br>
+                Categorie:
+                <select id = "fieldCategorie">
+                    <option value = "Laptop">Laptop</option>
+                    <option value = "Telefon">Telefon</option>
+                    <option value = "Tableta">Tableta</option>
+                </select>
+                <br><br>
+                <p style = "cursor: pointer;" id = "adauga" class="w3-bar-item w3-theme w3-button">Adauga produs</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
+
+<div class="w3-main" style="margin-left:300px;">
+
+    <div class="w3-top w3-theme w3-large w3-hide-large">
+        <i class="fa fa-bars w3-button w3-teal w3-xlarge" onclick="w3_open()"></i>
+    </div>
+
+    <header class="w3-container w3-theme w3-padding-64 w3-center">
+        <h1 class="w3-xxxlarge w3-padding-16">Online Shop</h1>
+    </header>
+
+    <br><input type = "text" id = "fieldSearch" placeholder = "Cauta produs..."> <button id = "search">Cauta</button><br>
+    <div class="w3-container w3-padding-large w3-section w3-light-grey">
+        <h1 class="w3-large">Toate produsele</h1>
+
+        <div class = "produse">
+
+        </div>
+
+    </div>
+
+
+</div>
+
+<script>
+if (document.cookie) {
+
+}
+else {
+    $('#logout').hide();
+}
+
+$('#logout').click (function () {
+    document.cookie = '';
+    window.location.href = '/login.html';
+});
+
+$.get('selectCategoryByUsername/' + document.cookie, function (data) {
+    if (data != 'administrator') {
+        $('.adaugare').empty ();
+        $('.adaugare').append ('Nu aveti aceasta permisiune!');
+    }
+});
+
+$('#adauga').click (function () {
+    var e = document.getElementById("fieldCategorie");
+    var strUser = e.options[e.selectedIndex].text;
+
+    var objToMySql = {
+        nume: $('#fieldNume').val(),
+        categorie: strUser,
+        pret_unitar: $('#fieldPret').val(),
+        cantitate: $('#fieldCantitate').val(),
+        imagine: $('#fieldImagine').val()
+    };
+
+    $.ajax('/insertProdusPAO', {
+        type: 'post',
+        data: JSON.stringify(objToMySql),
+        dataType: 'json',
+        contentType: 'application/json',
+        success: function(data) { alert('Receive: ' + data); }
+    });
+
+    alert ('Produsul a fost adaugat!');
+
+    location.reload();
+
+});
+
+$('#search').click (function () {
+    $.get ('/selectProduseLikeName/' + $('#fieldSearch').val(), function (data) {
+        $('.produse').empty();
+
+        for (let i = 0; i < data.length; ++i) {
+            $('.produse').append ('<div>' +
+                '<img style = "border-radius: 50%; width: 75px; height: 75px;" src = "' + data[i].imagine + '"></img> ' +
+                data[i].nume +
+                ' <a id = "' + data[i].id + '/'+ data[i].pret_unitar +'" style = "cursor: pointer;" class = "w3-hove-white">(Cumpara)</a> - ' +
+                'pret: ' + data[i].pret_unitar + '; stoc: ' + data[i].cantitate + ' produse</div>');
+        }
+
+        $('.w3-hove-white').click (function () {
+            var produsid = $(this).attr('id').split('/')[0];
+            var pretprodus = $(this).attr('id').split('/')[1];
+            $.get('/selectIdByUsername/' + document.cookie, function (data) {
+                var userid = data;
+
+                var objToMySql = {
+                    idUtilizator: userid,
+                    idProdus: produsid,
+                    cantitate: 1,
+                    pret: pretprodus
+                };
+
+                $.ajax('/insertOrdDetails', {
+                    type: 'post',
+                    data: JSON.stringify(objToMySql),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                var objToMySqlUpdate = {
+                    id: produsid,
+                    cantitate: -1
+                };
+
+                $.ajax('/updateProdusPAO', {
+                    type: 'put',
+                    data: JSON.stringify(objToMySqlUpdate),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                alert ('Produsul a fost adaugat in cosul de cumparaturi!');
+
+                location.reload();
+            });
+        });
+    });
+});
+
+if (window.location.href.split('?')[1] === undefined) {
+    window.location.href = '/?tab=all';
+}
+
+var tab = window.location.href.split('?')[1].split('=')[1];
+
+if (tab == 'all') {
+    $.get('/selectAllProdusPAO', function (data) {
+        for (let i = 0; i < data.length; ++i) {
+            $('.produse').append ('<div>' +
+                '<img style = "border-radius: 50%; width: 75px; height: 75px;" src = "' + data[i].imagine + '"></img> ' +
+                data[i].nume +
+                ' <a id = "' + data[i].id + '/'+ data[i].pret_unitar +'" style = "cursor: pointer;" class = "w3-hove-white">(Cumpara)</a> - ' +
+                'pret: ' + data[i].pret_unitar + '; stoc: ' + data[i].cantitate + ' produse</div>');
+        }
+
+        $('.w3-hove-white').click (function () {
+            var produsid = $(this).attr('id').split('/')[0];
+            var pretprodus = $(this).attr('id').split('/')[1];
+            $.get('/selectIdByUsername/' + document.cookie, function (data) {
+                var userid = data;
+
+                var objToMySql = {
+                    idUtilizator: userid,
+                    idProdus: produsid,
+                    cantitate: 1,
+                    pret: pretprodus
+                };
+
+                $.ajax('/insertOrdDetails', {
+                    type: 'post',
+                    data: JSON.stringify(objToMySql),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                var objToMySqlUpdate = {
+                    id: produsid,
+                    cantitate: -1
+                };
+
+                $.ajax('/updateProdusPAO', {
+                    type: 'put',
+                    data: JSON.stringify(objToMySqlUpdate),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                alert ('Produsul a fost adaugat in cosul de cumparaturi!');
+
+                location.reload();
+            });
+        });
+    });
+}
+else if (tab == 'laptop') {
+    $.get('/selectAllProdusPAO/Laptop', function (data) {
+        for (let i = 0; i < data.length; ++i) {
+            $('.produse').append ('<div>' +
+                '<img style = "border-radius: 50%; width: 75px; height: 75px;" src = "' + data[i].imagine + '"></img> ' +
+                data[i].nume +
+                ' <a id = "' + data[i].id + '/'+ data[i].pret_unitar +'" style = "cursor: pointer;" class = "w3-hove-white">(Cumpara)</a> - ' +
+                'pret: ' + data[i].pret_unitar + '; stoc: ' + data[i].cantitate + ' produse</div>');
+        }
+
+        $('.w3-hove-white').click (function () {
+            var produsid = $(this).attr('id').split('/')[0];
+            var pretprodus = $(this).attr('id').split('/')[1];
+            $.get('/selectIdByUsername/' + document.cookie, function (data) {
+                var userid = data;
+
+                var objToMySql = {
+                    idUtilizator: userid,
+                    idProdus: produsid,
+                    cantitate: 1,
+                    pret: pretprodus
+                };
+
+                $.ajax('/insertOrdDetails', {
+                    type: 'post',
+                    data: JSON.stringify(objToMySql),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                var objToMySqlUpdate = {
+                    id: produsid,
+                    cantitate: -1
+                };
+
+                $.ajax('/updateProdusPAO', {
+                    type: 'put',
+                    data: JSON.stringify(objToMySqlUpdate),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                alert ('Produsul a fost adaugat in cosul de cumparaturi!');
+
+                location.reload();
+            });
+        });
+    });
+}
+else if (tab == 'telefon') {
+    $.get('/selectAllProdusPAO/Telefon', function (data) {
+        for (let i = 0; i < data.length; ++i) {
+            $('.produse').append ('<div>' +
+                '<img style = "border-radius: 50%; width: 75px; height: 75px;" src = "' + data[i].imagine + '"></img> ' +
+                data[i].nume +
+                ' <a id = "' + data[i].id + '/'+ data[i].pret_unitar +'" style = "cursor: pointer;" class = "w3-hove-white">(Cumpara)</a> - ' +
+                'pret: ' + data[i].pret_unitar + '; stoc: ' + data[i].cantitate + ' produse</div>');
+        }
+
+        $('.w3-hove-white').click (function () {
+            var produsid = $(this).attr('id').split('/')[0];
+            var pretprodus = $(this).attr('id').split('/')[1];
+            $.get('/selectIdByUsername/' + document.cookie, function (data) {
+                var userid = data;
+
+                var objToMySql = {
+                    idUtilizator: userid,
+                    idProdus: produsid,
+                    cantitate: 1,
+                    pret: pretprodus
+                };
+
+                $.ajax('/insertOrdDetails', {
+                    type: 'post',
+                    data: JSON.stringify(objToMySql),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                var objToMySqlUpdate = {
+                    id: produsid,
+                    cantitate: -1
+                };
+
+                $.ajax('/updateProdusPAO', {
+                    type: 'put',
+                    data: JSON.stringify(objToMySqlUpdate),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                alert ('Produsul a fost adaugat in cosul de cumparaturi!');
+
+                location.reload();
+            });
+        });
+    });
+}
+else if (tab == 'tableta') {
+    $.get('/selectAllProdusPAO/Tableta', function (data) {
+        for (let i = 0; i < data.length; ++i) {
+            $('.produse').append ('<div>' +
+                '<img style = "border-radius: 50%; width: 75px; height: 75px;" src = "' + data[i].imagine + '"></img> ' +
+                data[i].nume +
+                ' <a id = "' + data[i].id + '/'+ data[i].pret_unitar +'" style = "cursor: pointer;" class = "w3-hove-white">(Cumpara)</a> - ' +
+                'pret: ' + data[i].pret_unitar + '; stoc: ' + data[i].cantitate + ' produse</div>');
+        }
+
+        $('.w3-hove-white').click (function () {
+            var produsid = $(this).attr('id').split('/')[0];
+            var pretprodus = $(this).attr('id').split('/')[1];
+            $.get('/selectIdByUsername/' + document.cookie, function (data) {
+                var userid = data;
+
+                var objToMySql = {
+                    idUtilizator: userid,
+                    idProdus: produsid,
+                    cantitate: 1,
+                    pret: pretprodus
+                };
+
+                $.ajax('/insertOrdDetails', {
+                    type: 'post',
+                    data: JSON.stringify(objToMySql),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                var objToMySqlUpdate = {
+                    id: produsid,
+                    cantitate: -1
+                };
+
+                $.ajax('/updateProdusPAO', {
+                    type: 'put',
+                    data: JSON.stringify(objToMySqlUpdate),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    success: function(data) { alert('Receive: ' + data); }
+                });
+
+                alert ('Produsul a fost adaugat in cosul de cumparaturi!');
+
+                location.reload();
+            });
+        });
+    });
+}
+else {
+    window.location.href = '/?tab=all';
+}
+</script>
+
+<script>
+function w3_open() {
+    document.getElementById("mySidebar").style.display = "block";
+    document.getElementById("myOverlay").style.display = "block";
+}
+function w3_close() {
+    document.getElementById("mySidebar").style.display = "none";
+    document.getElementById("myOverlay").style.display = "none";
+}
+openNav("nav01");
+function openNav(id) {
+    document.getElementById("nav01").style.display = "none";
+    document.getElementById("nav02").style.display = "none";
+    document.getElementById("nav03").style.display = "none";
+    document.getElementById(id).style.display = "block";
+}
+</script>
+<script src="https://www.w3schools.com/lib/w3codecolor.js"></script>
+<script>
+w3CodeColor();
+</script>
+</body>
+</html>

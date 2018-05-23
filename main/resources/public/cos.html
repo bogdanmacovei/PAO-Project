@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<title>Online Shop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-teal.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"> </script>
+<body>
+
+<div class="w3-sidebar w3-collapse w3-white w3-animate-left w3-large" style="z-index:3;width:300px;" id="mySidebar">
+
+    <div id="nav01" class="w3-bar-block">
+        <a class="w3-button w3-hover-teal w3-hide-large w3-large w3-right" href="javascript:void(0)" onclick="w3_close()">×</a>
+        <a class="w3-bar-item w3-button" href="/">Home page</a>
+        <p style = "cursor: pointer;" id = "logout" class="w3-bar-item w3-button">Log out</p>
+    </div>
+
+
+</div>
+
+<div class="w3-overlay w3-hide-large" onclick="w3_close()" style="cursor:pointer" id="myOverlay"></div>
+
+<div class="w3-main" style="margin-left:300px;">
+
+    <div class="w3-top w3-theme w3-large w3-hide-large">
+        <i class="fa fa-bars w3-button w3-teal w3-xlarge" onclick="w3_open()"></i>
+    </div>
+
+    <header class="w3-container w3-theme w3-padding-64 w3-center">
+        <h1 class="w3-xxxlarge w3-padding-16">Online Shop</h1>
+    </header>
+
+    <br>Bine ati venit, <b id = "username">Guest</b>!
+    <div class="w3-container w3-padding-large w3-section w3-light-grey">
+        <h1 class="w3-large">Produsele pe care le aveti in cos</h1>
+        <h2>Suma totala curenta: <b id = "suma"></b></h2>
+
+        <div class = "produse">
+
+        </div>
+
+    </div>
+
+
+</div>
+
+<script>
+if (document.cookie) {
+    $('#username').empty();
+    $('#username').append (document.cookie);
+}
+else {
+    $('#logout').hide();
+}
+
+$('#logout').click (function () {
+    document.cookie = '';
+    window.location.href = '/login.html';
+});
+
+var suma = 0;
+
+$.get ('/selectIdByUsername/' + document.cookie, function (userId) {
+    $.get ('/selectOrdDetailsByUserId/' + userId, function (dataOrd) {
+        var nr = 0;
+        for (let i = 0; i < dataOrd.length; ++i) {
+            // am dataOrd[i].idProdus
+            suma += dataOrd[i].pret;
+            $.get('selectProdusPAO/' + dataOrd[i].idProdus, function (produs) {
+                $('.produse').append ('<div>' +
+                    '<img style = "border-radius: 50%; width: 75px; height: 75px;" src = "' + produs[0].imagine + '"></img> ' +
+                    produs[0].nume +
+                    ' <a id = "' + dataOrd[i].id +'" style = "cursor: pointer;" class = "w3-hove-white">(Anuleaza)</a>' +
+                    '</div>');
+
+                $('.w3-hove-white').click (function () {
+
+                    if (nr == 0) {
+                        nr ++;
+                        $.ajax('/deleteOrdDetailsById/' + $(this).attr('id'), {
+                            type: 'delete'
+                        });
+
+                        var objToMySqlUpdate = {
+                            id: produs[0].id,
+                            cantitate: 1
+                        };
+
+                        $.ajax('/updatePlusProdusPAO', {
+                            type: 'put',
+                            data: JSON.stringify(objToMySqlUpdate),
+                            dataType: 'json',
+                            contentType: 'application/json'
+                        });
+
+                        nr++;
+
+                        location.reload();
+
+                    }
+                    else {
+                        nr++;
+                    }
+                });
+            });
+        }
+
+        $('#suma').append (suma);
+    });
+});
+
+
+</script>
+<script src="https://www.w3schools.com/lib/w3codecolor.js"></script>
+<script>
+w3CodeColor();
+</script>
+</body>
+</html>
